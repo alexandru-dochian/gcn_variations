@@ -1,0 +1,6 @@
+data/
+
+!results/overview.csv
+results/*
+
+*.pyc
