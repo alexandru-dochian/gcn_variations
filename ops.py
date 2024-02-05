@@ -21,16 +21,18 @@ class Normalize(nn.Module):
 class SelfLoops(nn.Module):
     def __init__(self, num_nodes: int, trainable: bool, initial_factor: int = 2):
         super().__init__()
-        self.mask = torch.ones(num_nodes) * initial_factor
-
+        initial_value = torch.ones(num_nodes) * initial_factor
         if trainable:
-            self.mask = nn.Parameter(self.mask)
+            self.mask = nn.Parameter(initial_value)
+        else:
+            self.mask = initial_value
 
     def forward(self, A: torch.Tensor):
+        mask = self.mask.to(device=A.device, dtype=A.dtype)
         # ReLU ensures non-negativity during backpropagation
-        activated_mask = F.relu(self.mask)
+        activated_mask = F.relu(mask)
         dense_mask = torch.diag(activated_mask)
-        return A + dense_mask.to(device=A.device, dtype=A.dtype)
+        return torch.add(A, dense_mask)
 
 
 class GCNLayer(nn.Module):
@@ -65,7 +67,7 @@ class TopKGraph(nn.Module):
         return pooled_H, pooled_A, idx
 
 
-class Pool(nn.Module):
+class GPool(nn.Module):
     def __init__(self, pooling_size, in_features, drop_prob):
         super().__init__()
         self.pooling_size = pooling_size
@@ -93,7 +95,7 @@ class GPoolBlock(nn.Module):
     ):
         super().__init__()
         self.gcn_layer = GCNLayer(in_features, out_features, gcn_drop_prob)
-        self.pool_layer = Pool(pooling_size, out_features, pool_drop_prob)
+        self.pool_layer = GPool(pooling_size, out_features, pool_drop_prob)
 
     def forward(self, H, A):
         H, A, idx = self.pool_layer(H, A)
@@ -106,7 +108,7 @@ class GPoolBlock(nn.Module):
 ###############################################################################
 
 
-class Unpool(nn.Module):
+class GUnpool(nn.Module):
     def forward(self, pooled_H, A_old, idx):
         initial_num_nodes = A_old.shape[0]
         num_features = pooled_H.shape[1]
@@ -129,7 +131,7 @@ class GUnpoolBlock(nn.Module):
     ):
         super().__init__()
         self.gcn_layer = GCNLayer(in_features, out_features, gcn_drop_prob)
-        self.unpool_layer = Unpool()
+        self.unpool_layer = GUnpool()
 
     def forward(self, H, H_old, A_old, idx):
         H, A = self.unpool_layer(H, A_old, idx)

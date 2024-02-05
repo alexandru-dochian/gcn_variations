@@ -5,30 +5,6 @@ import torch.nn.functional as F
 from ops import GCNLayer, GPoolBlock, GUnpoolBlock, Normalize, SelfLoops
 
 
-class GCN(nn.Module):
-    def __init__(
-        self,
-            num_nodes: int,
-            in_features: int,
-            output_classes: int,
-            hidden_features: int,
-            gcn_drop_prob: int,
-            train_self_loops: bool
-    ):
-        super().__init__()
-        self.normalize = Normalize()
-        self.self_loops = SelfLoops(num_nodes, trainable=train_self_loops)
-        self.layer_1 = GCNLayer(in_features, hidden_features, gcn_drop_prob)
-        self.layer_2 = GCNLayer(hidden_features, output_classes, gcn_drop_prob)
-
-    def forward(self, H, A) -> torch.Tensor:
-        A = self.self_loops(A)
-        A = self.normalize(A)
-        H = self.layer_1(H, A)
-        H = self.layer_2(H, A)
-        return F.log_softmax(H, dim=1)
-
-
 class GraphUnet(nn.Module):
     def __init__(
         self,
@@ -79,18 +55,18 @@ class GraphUnet(nn.Module):
             self.unpool_blocks.append(unpools)
 
     def forward(self, H, A) -> torch.Tensor:
-        A = self.normalize(A)
         A = self.self_loops(A)
+        A = self.normalize(A)
 
         # First GCN
         H = self.first_gcn(H, A)
 
-        # Pooling
-        link_information = []
-        H_old_history = []
-        A_old_history = []
-
         for block_index in range(self.number_of_blocks):
+            link_information = []
+            H_old_history = []
+            A_old_history = []
+
+            # Pooling
             for depth_index in range(self.depth):
                 A_old_history.append(A)
                 H_old_history.append(H)
