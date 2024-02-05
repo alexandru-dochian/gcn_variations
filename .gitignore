@@ -1,6 +1,4 @@
 data/
-
-!results/overview.csv
-results/*
-
+results/*/*
 *.pyc
+!overview.csv
