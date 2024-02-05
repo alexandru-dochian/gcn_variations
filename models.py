@@ -55,8 +55,8 @@ class GraphUnet(nn.Module):
             self.unpool_blocks.append(unpools)
 
     def forward(self, H, A) -> torch.Tensor:
-        A = self.normalize(A)
         A = self.self_loops(A)
+        A = self.normalize(A)
 
         # First GCN
         H = self.first_gcn(H, A)

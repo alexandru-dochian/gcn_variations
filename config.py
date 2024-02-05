@@ -1,31 +1,5 @@
 EXPERIMENTS_CONFIG = [
     {
-        "name": "GCN drop 0.2 trainable self loops",
-        "model": "GraphUnet",
-        "dataset": "Cora",
-        "model_args": {
-                "k_values": [],
-                "hidden_features": 256,
-                "gcn_drop_prob": 0.2,
-                "pool_drop_prob": 0,
-                "number_of_blocks": 0,
-                "train_self_loops": True
-        }
-    },
-    {
-        "name": "GCN drop 0.5 trainable self loops",
-        "model": "GraphUnet",
-        "dataset": "Cora",
-        "model_args": {
-            "k_values": [],
-            "hidden_features": 256,
-            "gcn_drop_prob": 0.5,
-            "pool_drop_prob": 0,
-            "number_of_blocks": 0,
-            "train_self_loops": True
-        }
-    },
-    {
         "name": "GCN drop 0.2 not trainable self loops",
         "model": "GraphUnet",
         "dataset": "Cora",
